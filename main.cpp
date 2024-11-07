@@ -98,7 +98,6 @@ void start_server(asio::io_context &io_context, int &port) {
 
     try {
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port));
-        std::cout << "Listening for TCP messages on port " << port << "..." << std::endl;
 
         while (true) {
             tcp::socket socket(io_context);
@@ -127,7 +126,7 @@ void start_client(asio::io_context &io_context, int &port) {
     }
 
     while (true) {
-        std::cout << "Enter command: ";
+        std::wcout << L"Введите команду:";
         std::string command;
         std::getline(std::cin, command);
 
@@ -136,7 +135,28 @@ void start_client(asio::io_context &io_context, int &port) {
         iss >> cmd;
 
         if (command == "/info") {
-            std::cout << "Server IP: " << server_ip << " listening on port " << port << std::endl;
+            std::wcout << L"Ваш IP адрес: ";
+            std::cout << server_ip << std::endl;
+            std::wcout << L"Порт по которому вы принимаете сообщения: ";
+            std::cout << port << std::endl;
+        }
+        else if (command == "/help") {
+            std::wcout << L"1) /info - узнать информацию о сервере" << std::endl;
+            std::wcout << L"2) /help - выводит информацию о командах" << std::endl;
+            std::wcout << L"3) /add_contact - добавляет человека в контакты" << std::endl;
+            std::wcout << L"4) /edit_contact - изменяет контакт" << std::endl;
+            std::wcout << L"5) /delete_contact - удаляет контакт" << std::endl;
+            std::wcout << L"6) /show_contacts - выводит все контакты" << std::endl;
+            std::wcout << L"7) /set_port - изменяет порт для прослушивания сообщений" << std::endl;
+            std::wcout << L"8) /send - отправляет сообщение пользователю, для работы указывается ip адрес пользователя" << std::endl;
+            std::wcout << L"9) /send_name - отправляет сообщение пользователю по имени из записной книжки" << std::endl;
+            std::wcout << L"|| Для каждой команды начиная с 3 добавьте приставку '?' чтобы узнать о ней подробнее ||" << std::endl;
+        }
+        else if (command == "/set_port ?") {
+            std::wcout << L"Изменяет порт для прослушивания сообщений\n"
+                          L"-----------------------------------------\n"
+                          L"Пример: /set_port <порт>\n"
+                          L"- порт: новое число на котором вы будет принимать сообщения" << std::endl;
         }
         else if (command.substr(0, 10) == "/set_port ") {
             int new_port;
@@ -151,6 +171,15 @@ void start_client(asio::io_context &io_context, int &port) {
             std::cout << "Port updated to " << port << ". Restart the server to apply changes." << std::endl;
             break;
         }
+
+        else if (command == "/add_contact ?") {
+            std::wcout << L"Добавляет нового пользователя в записную книжку\n"
+                          L"-----------------------------------------------\n"
+                          L"Пример: /add_contact <название> <ip адрес> <порт>\n"
+                          L"- название: имя пользователя которое будет использоваться для отправки сообщения\n"
+                          L"- ip адрес: адресс ПК пользователя, например: 192.168.х.х\n"
+                          L"- порт: число, по которому пользователь принимает сообщения" << std::endl;
+        }
         else if (cmd == "/add_contact") {
             std::string name, ip;
             int port;
@@ -163,6 +192,15 @@ void start_client(asio::io_context &io_context, int &port) {
                 save_contacts(contacts);
                 std::cout << "Contact " << name << " added.\n";
             }
+        }
+
+        else if (command == "/edit_contact ?") {
+            std::wcout << L"Изменяет данные пользователя в записной книжке\n"
+                          L"----------------------------------------------\n"
+                          L"Пример: /edit_contact <название> <ip адрес> <порт>\n"
+                          L"- название: имя пользователя по которому будет произведен поиск в записной книжке\n"
+                          L"- ip адрес: новый адресс ПК пользователя, например: 192.168.х.х\n"
+                          L"- порт: новое число, по которому пользователь принимает сообщения" << std::endl;
         }
         else if (cmd == "/edit_contact") {
             std::string name, ip;
@@ -177,6 +215,13 @@ void start_client(asio::io_context &io_context, int &port) {
                 std::cout << "Contact " << name << " updated.\n";
             }
         }
+
+        else if (command == "/delete_contact ?") {
+            std::wcout << L"Удаляет данные пользователя в записной книжке\n"
+                          L"----------------------------------------------\n"
+                          L"Пример: /delete_contact <название>\n"
+                          L"- название: имя пользователя по которому будет произведен поиск в записной книжке" << std::endl;
+        }
         else if (cmd == "/delete_contact") {
             std::string name;
             iss >> name;
@@ -188,10 +233,24 @@ void start_client(asio::io_context &io_context, int &port) {
                 std::cout << "Contact not found.\n";
             }
         }
+
+        else if (command == "/show_contacts ?") {
+            std::wcout << L"Выводит всех пользователей в записной книжке\n"
+                          L"--------------------------------------------\n"
+                          "Пример: /show_contacts" << std::endl;
+        }
         else if (command == "/show_contacts") {
             for (const auto &[name, contact]: contacts) {
-                std::cout << name << ": " << contact.ip << ":" << contact.port << std::endl;
+                std::cout << "- " << name << ": " << contact.ip << ":" << contact.port << std::endl;
             }
+        }
+
+        else if (command == "/send ?") {
+            std::wcout << L"Отправляет сообщение пользователю\n"
+                          L"---------------------------------\n"
+                          L"Пример: /send <ip адрес> <порт>\n"
+                          L"- ip адрес: адресс ПК пользователя, например: 192.168.х.х\n"
+                          L"- порт: число, по которому пользователь принимает сообщения" << std::endl;
         }
         else if (cmd == "/send") {
             std::string user_ip;
@@ -224,12 +283,18 @@ void start_client(asio::io_context &io_context, int &port) {
                 socket.close();
             }
         }
+
+        else if (command == "/send_name ?") {
+            std::wcout << L"Отправляет сообщение пользователю из записной книжки\n"
+                          L"----------------------------------------------------\n"
+                          L"Пример: /send_name <имя пользователя>" << std::endl;
+        }
         else if (cmd == "/send_name") {
             std::string name;
             iss >> name;
 
             if (contacts.find(name) == contacts.end()) {
-                std::cout << "Contact not found." << std::endl;
+                std::wcout << L"Данный контакт не найден!" << std::endl;
                 continue;
             }
 
@@ -241,11 +306,10 @@ void start_client(asio::io_context &io_context, int &port) {
                     socket.connect(endpoint);
                 }
 
-                std::cout << "Connected to " << name << " (" << contact.ip << ":" << contact.port <<
-                        "). Type 'exit' or '-e' to quit.\n";
+                std::cout << "Connected to " << name << " (" << contact.ip << ":" << contact.port << "). Type 'exit' or '-e' to quit.\n";
 
                 while (true) {
-                    std::cout << "Enter message: ";
+                    std::wcout << "Введите сообщение:";
                     std::string message;
                     std::getline(std::cin, message);
 
@@ -263,9 +327,9 @@ void start_client(asio::io_context &io_context, int &port) {
                 socket.close();
             }
         }
+
         else {
-            std::cout << "Invalid command. Use /send <ip> <port> <message>, /info, or /set_port <new port>" <<
-                    std::endl;
+            std::wcout << L"Неверная команда. Используйте /help чтобы узнать доступные команды" << std::endl;
         }
     }
 }
@@ -274,7 +338,18 @@ int main() {
     setlocale(LC_ALL, "");
     asio::io_context io_context;
 
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+
     int port = load_port();
+
+    std::wcout << L"Прослушивание TCP сообщений на порту: " << port << "    *" << std::endl;
+    std::wcout << L"Чтобы узнать подробнее напишите /info         *" << std::endl;
+    std::wcout << L"Если нужна помощь с командами напишите /help  *" << std::endl;
+    std::wcout << L"***********************************************" << std::endl;
 
     std::thread server_thread([&io_context, &port]() {
         start_server(io_context, port);
@@ -283,7 +358,7 @@ int main() {
     start_client(io_context, port);
 
     server_thread.detach();
-    std::cout << "Restarting with new port..." << std::endl;
+    std::wcout << L"Перезапуск с новым портом" << std::endl;
     main();
     return 0;
 }
