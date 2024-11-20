@@ -1,11 +1,11 @@
-﻿#include <asio.hpp>
+﻿#include <unordered_map>
+#include <asio.hpp>
 #include <iostream>
 #include <array>
 #include <thread>
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <unordered_map>
 #include <locale>
 
 using asio::ip::tcp;
@@ -89,7 +89,6 @@ void handle_client(tcp::socket socket, const std::unordered_map<std::string, Con
         if (contact_name.empty()) {
             contact_name = address;
         }
-        std::cout << "User " << contact_name << " disconnected.\n";
     }
 }
 
@@ -111,6 +110,8 @@ void start_server(asio::io_context &io_context, int &port) {
 }
 
 void start_client(asio::io_context &io_context, int &port) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
     auto contacts = load_contacts();
     tcp::socket socket(io_context);
 
@@ -126,7 +127,9 @@ void start_client(asio::io_context &io_context, int &port) {
     }
 
     while (true) {
+        SetConsoleTextAttribute(hConsole, 10);
         std::wcout << L"Введите команду:";
+        SetConsoleTextAttribute(hConsole, 15);
         std::string command;
         std::getline(std::cin, command);
 
@@ -153,10 +156,12 @@ void start_client(asio::io_context &io_context, int &port) {
             std::wcout << L"|| Для каждой команды начиная с 3 добавьте приставку '?' чтобы узнать о ней подробнее ||" << std::endl;
         }
         else if (command == "/set_port ?") {
+            SetConsoleTextAttribute(hConsole, 6);
             std::wcout << L"Изменяет порт для прослушивания сообщений\n"
                           L"-----------------------------------------\n"
                           L"Пример: /set_port <порт>\n"
                           L"- порт: новое число на котором вы будет принимать сообщения" << std::endl;
+            SetConsoleTextAttribute(hConsole, 15);
         }
         else if (command.substr(0, 10) == "/set_port ") {
             int new_port;
@@ -249,7 +254,7 @@ void start_client(asio::io_context &io_context, int &port) {
             std::wcout << L"Отправляет сообщение пользователю\n"
                           L"---------------------------------\n"
                           L"Пример: /send <ip адрес> <порт>\n"
-                          L"- ip адрес: адресс ПК пользователя, например: 192.168.х.х\n"
+                          L"- ip адрес: адрес ПК пользователя, например: 192.168.х.х\n"
                           L"- порт: число, по которому пользователь принимает сообщения" << std::endl;
         }
         else if (cmd == "/send") {
@@ -329,7 +334,9 @@ void start_client(asio::io_context &io_context, int &port) {
         }
 
         else {
+            SetConsoleTextAttribute(hConsole, 11);
             std::wcout << L"Неверная команда. Используйте /help чтобы узнать доступные команды" << std::endl;
+            SetConsoleTextAttribute(hConsole, 15);
         }
     }
 }
@@ -346,10 +353,14 @@ int main() {
 
     int port = load_port();
 
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    SetConsoleTextAttribute(hConsole, 6);
     std::wcout << L"Прослушивание TCP сообщений на порту: " << port << "    *" << std::endl;
     std::wcout << L"Чтобы узнать подробнее напишите /info         *" << std::endl;
     std::wcout << L"Если нужна помощь с командами напишите /help  *" << std::endl;
     std::wcout << L"***********************************************" << std::endl;
+    SetConsoleTextAttribute(hConsole, 15);
 
     std::thread server_thread([&io_context, &port]() {
         start_server(io_context, port);
